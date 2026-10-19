@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banco Inter - Simulador</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #121212; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .phone-container { width: 100%; max-width: 414px; height: 100vh; max-height: 896px; background-color: #121212; display: flex; flex-direction: column; position: relative; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
+        @media (min-width: 415px) { .phone-container { border-radius: 40px; border: 10px solid #222; height: 85vh; } }
+        .app-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px 10px 20px; background: #121212; }
+        .profile-area { display: flex; align-items: center; gap: 12px; }
+        .profile-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #ff7a00; cursor: pointer; }
+        .header-icons { display: flex; gap: 20px; font-size: 20px; color: #ccc; cursor: pointer; align-items: center; }
+        .content { flex: 1; overflow-y: auto; padding-bottom: 90px; }
+        .content::-webkit-scrollbar { display: none; }
+        .saldo-section { padding: 10px 20px 15px 20px; }
+        .saldo-label { font-size: 14px; color: #aaa; margin-bottom: 4px; }
+        .saldo-row { display: flex; justify-content: space-between; align-items: center; }
+        .saldo-valor { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; cursor: pointer; }
+        .saldo-actions { display: flex; gap: 12px; font-size: 18px; color: #aaa; cursor: pointer; }
+        .quick-menu { display: flex; gap: 12px; padding: 5px 20px 15px 20px; overflow-x: auto; }
+        .quick-menu::-webkit-scrollbar { display: none; }
+        .quick-item { background-color: #1e1e1e; padding: 10px 18px; border-radius: 12px; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer; border: 1px solid #2a2a2a; }
+        .quick-item svg { width: 18px; height: 18px; flex-shrink: 0; fill: #ff7a00; }
+        .grid-menu { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 0 20px 15px 20px; }
+        .grid-card { background-color: #1e1e1e; border-radius: 14px; padding: 16px 4px; display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 11px; color: #ccc; text-align: center; cursor: pointer; border: 1px solid #2a2a2a; }
+        .grid-card svg { width: 24px; height: 24px; flex-shrink: 0; fill: #ff7a00; }
+        .banner-card { background: linear-gradient(135deg, #3d1c14 0%, #201311 100%); margin: 10px 20px 15px 20px; border-radius: 16px; padding: 18px; border: 1px solid #52251a; position: relative; overflow: hidden; }
+        .banner-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 12px; line-height: 1.4; max-width: 65%; }
+        .banner-btn { background-color: #ff7a00; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; }
+        .banner-card img.card-img { position: absolute; right: -10px; bottom: -15px; width: 130px; opacity: 0.2; }
+        .widgets-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 20px 15px 20px; }
+        .widget-box { background-color: #1e1e1e; border-radius: 14px; padding: 15px; cursor: pointer; border: 1px solid #2a2a2a; }
+        .widget-box .w-title { font-size: 13px; color: #aaa; margin-bottom: 8px; }
+        .widget-box .w-content { display: flex; align-items: center; gap: 10px; }
+        .widget-box svg { width: 24px; height: 24px; flex-shrink: 0; fill: #ff7a00; }
+        .widget-box .w-value { font-size: 15px; font-weight: 700; }
+        .bottom-nav { position: absolute; bottom: 0; left: 0; width: 100%; background-color: #161616; display: flex; justify-content: space-around; padding: 10px 0 18px 0; border-top: 1px solid #222; z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: #888; cursor: pointer; background: none; border: none; }
+        .nav-item.active { color: #ff7a00; }
+        .nav-item.active svg { fill: #ff7a00; }
+        .nav-item svg { width: 22px; height: 22px; flex-shrink: 0; fill: #888; }
+        .screen { display: none; flex-direction: column; height: 100%; position: absolute; top: 0; left: 0; width: 100%; background-color: #121212; z-index: 200; overflow-y: auto; }
+        .screen.active { display: flex; }
+        .screen-header { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; background-color: #121212; border-bottom: 1px solid #222; }
+        .screen-header h2 { font-size: 16px; font-weight: 600; }
+        .screen-header .back-btn { background: none; border: none; color: #ff7a00; font-size: 18px; cursor: pointer; }
+        .pix-menu-list { padding: 15px 20px; display: flex; flex-direction: column; gap: 10px; }
+        .pix-option-btn { background-color: #1e1e1e; border: 1px solid #2a2a2a; padding: 16px; border-radius: 12px; color: #fff; font-size: 15px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .pix-option-btn i { color: #ff7a00; }
+        .pix-icons-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 10px 20px; }
+        .pix-icon-item { background-color: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 12px; padding: 14px 6px; display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 11px; color: #ccc; text-align: center; cursor: pointer; position: relative; }
+        .badge-novo { position: absolute; top: 4px; right: 4px; background: #ff7a00; color: #fff; font-size: 8px; padding: 1px 4px; border-radius: 4px; font-weight: 700; }
+        .pix-banner { background: linear-gradient(135deg, #442111 0%, #201311 100%); margin: 15px 20px; border-radius: 14px; padding: 16px; border: 1px solid #632e18; display: flex; justify-content: space-between; align-items: center; }
+        .pix-banner p { font-size: 13px; max-width: 65%; line-height: 1.4; }
+        .pix-banner button { background: #fff; color: #000; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        .input-group label { font-size: 13px; color: #aaa; }
+        .input-group input { background-color: #1e1e1e; border: 1px solid #333; border-radius: 10px; padding: 12px 14px; color: #fff; font-size: 14px; outline: none; }
+        .input-group input:focus { border-color: #ff7a00; }
+        .btn-laranja { background-color: #ff7a00; color: #fff; border: none; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 15px; cursor: pointer; text-align: center; width: 100%; margin-top: 10px; }
+        .valor-screen-content { display: flex; flex-direction: column; align-items: center; justify-content: space-between; height: 100%; padding: 20px; }
+        .valor-input-box { text-align: center; margin-top: 40px; width: 100%; }
+        .valor-input-box .saldo-disponivel { font-size: 13px; color: #aaa; margin-bottom: 15px; }
+        .valor-input-box .display-valor { font-size: 34px; font-weight: 700; color: #ff7a00; border-bottom: 2px solid #ff7a00; display: inline-block; padding-bottom: 5px; max-width: 100%; word-break: break-all; }
+        .valor-input-box .fav-nome { margin-top: 15px; font-size: 14px; color: #ccc; }
+        .custom-keyboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 320px; padding-bottom: 20px; }
+        .key-btn { background-color: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 10px; padding: 14px; font-size: 20px; font-weight: 600; color: #fff; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        .key-btn:active { background-color: #333; }
+        .key-btn.action { background-color: #ff7a00; border-color: #ff7a00; color: #fff; }
+        .comprovante-header { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; border-bottom: 1px solid #222; padding-bottom: 20px; }
+        .comprovante-header .inter-logo-comp { font-size: 26px; font-weight: 700; color: #ff7a00; letter-spacing: -1.5px; }
+        .comprovante-header h3 { font-size: 16px; color: #ff7a00; }
+        .comprovante-header .valor-comp { font-size: 24px; font-weight: 700; }
+        .bloco-detalhes { background-color: #1a1a1a; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; gap: 12px; border: 1px solid #2a2a2a; }
+        .detalhe-item { display: flex; justify-content: space-between; font-size: 13px; }
+        .detalhe-item span:first-child { color: #888; }
+        .detalhe-item span:last-child { font-weight: 500; text-align: right; }
+        .aviso-comprovante { display: flex; gap: 10px; background-color: #2a2212; border: 1px solid #5a4412; padding: 12px; border-radius: 10px; font-size: 12px; color: #e2b963; align-items: center; }
+    </style>
+</head>
+<body>
+
+<div class="phone-container">
+    <div id="home-screen" class="screen active" style="position: relative;">
+        <div class="app-header">
+            <div class="profile-area">
+                <img id="avatar-home" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100" class="profile-avatar" onclick="abrirTela('config-screen')">
+            </div>
+            <div style="background-color: #1e1e1e; border: 1px solid #333; padding: 6px 14px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #fff; cursor: pointer;" onclick="alert('Pergunte à Seven')">
+                <div style="background-color: #ff7a00; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff;"><i class="fa-solid fa-plus"></i></div>
+                <span>Pergunte à Seven</span>
+            </div>
+            <div class="header-icons">
+                <i class="fa-regular fa-eye" id="toggle-saldo" onclick="alternarVisibilidadeSaldo()"></i>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="saldo-section">
+                <div class="saldo-label">Saldo</div>
+                <div class="saldo-row">
+                    <div class="saldo-valor" id="saldo-texto" onclick="abrirModalSaldo()" title="Clique para alterar o saldo">R\$ 0,03</div>
+                    <div class="saldo-actions">
+                        <i class="fa-solid fa-chevron-right" style="font-size: 14px;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-menu">
+                <div class="quick-item" onclick="abrirTela('pix-screen')">
+                    <svg viewBox="0 0 24 24"><path d="M12 2L2 12l10 10 10-10L12 2zm0 3.5l6.5 6.5L12 18.5 5.5 12 12 5.5z"/></svg> Pix
+                </div>
+                <div class="quick-item" onclick="abrirTela('pix-screen')">
+                    <svg viewBox="0 0 24 24"><path d="M2 4h20v2H2V4zm2 4h16v12H4V8zm2 2v8h12v-8H6z"/></svg> Pagar
+                </div>
+                <div class="quick-item" onclick="alert('Funcionalidade de Cartões')">
+                    <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg> Cartões
+                </div>
+            </div>
+
+            <div class="grid-menu">
+                <div class="grid-card" onclick="alert('Poupança')">
+                    <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h6v2H7v-2z"/></svg>
+                    <span>Poupança</span>
+                </div>
+                <div class="grid-card" onclick="alert('Recargas')">
+                    <svg viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>
+                    <span>Recargas</span>
+                </div>
+                <div class="grid-card" onclick="abrirTela('pix-screen')">
+                    <svg viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
+                    <span>Transferir</span>
+                </div>
+                <div class="grid-card" onclick="alert('Gift Card')">
+                    <svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.33 8.66 11.5 12 7.5l3.34 4L17 10.33 14.92 8H20v6z"/></svg>
+                    <span>Gift Card</span>
+                </div>
+            </div>
+
+            <div class="banner-card">
+                <h3>Ser Inter One é estar à frente com benefícios personalizados!</h3>
+                <button class="banner-btn" onclick="alert('Detalhes do Ser Inter One')">Eu quero</button>
+                <img src="https://logodownload.org/wp-content/uploads/2019/06/banco-inter-logo-3.png" class="card-img" alt="Cartão Inter">
+            </div>
+
+            <div class="widgets-row">
+                <div class="widget-box" onclick="abrirModalPorquinho()">
+                    <div class="w-title">Meu Porquinho</div>
+                    <div class="w-content">
+                        <svg viewBox="0 0 24 24"><path d="M19 10.5C19 6.36 15.42 3 11 3S3 6.36 3 10.5c0 2.22 1.02 4.22 2.62 5.61L5 19l3.12-1.04C9.17 18.3 10.05 18.5 11 18.5c4.42 0 8-3.36 8-7.5zM8.5 10c-.83 0-1.5-.67-1.5-1.5S7.67 7 8.5 7s1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm5 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                        <div class="w-value" id="porquinho-texto">R\$ 192,60</div>
+                    </div>
+                </div>
+                <div class="widget-box" onclick="alert('Pontos Loop')">
+                    <div class="w-title">Pontos Loop</div>
+                    <div class="w-content">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        <div class="w-value" style="font-size: 13px;">Acumule pontos</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="nav-item active">
+                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                <span>Início</span>
+            </button>
+            <button class="nav-item" onclick="alert('Forum')">
+                <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                <span>Forum</span>
+            </button>
+            <button class="nav-item" onclick="alert('Shop')">
+                <svg viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM10 4h4v2h-4V4zm10 15H4V8h16v11z"/></svg>
+                <span>Shop</span>
+            </button>
+            <button class="nav-item" onclick="abrirTela('config-screen')">
+                <svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+                <span>Invest</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="pix-screen" class="screen">
+        <div class="screen-header">
+            <button class="back-btn" onclick="voltarTela()"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2>Pix</h2>
+            <div style="width: 18px;"></div>
+        </div>
+        <div class="content" style="padding-bottom: 30px;">
+            <div class="pix-menu-list">
+                <button class="pix-option-btn" onclick="iniciarFluxoPix()">
+                    <span>Pagar</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+                <button class="pix-option-btn" onclick="alert('Receber Pix')">
+                    <span>Receber</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+            <div class="pix-icons-grid">
+                <div class="pix-icon-item"><span class="badge-novo">Novo</span><i class="fa-solid fa-key" style="color: #ff7a00; font-size: 18px;"></i><span>Cadastrar chave Pix</span></div>
+                <div class="pix-icon-item"><span class="badge-novo">Novo</span><i class="fa-solid fa-clock-rotate-left" style="color: #ff7a00; font-size: 18px;"></i><span>Pix Automático</span></div>
+                <div class="pix-icon-item" onclick="alert('Ajuda Pix')"><i class="fa-solid fa-circle-question" style="color: #ff7a00; font-size: 18px;"></i><span>Ajuda Pix</span></div>
+                <div class="pix-icon-item" onclick="alert('Contestar Pix')"><i class="fa-solid fa-triangle-exclamation" style="color: #ff7a00; font-size: 18px;"></i><span>Contestar Pix</span></div>
+            </div>
+            <div class="pix-banner">
+                <p>Suas chaves CPF e celular estão aqui?</p>
+                <button onclick="alert('Conferir chaves')">Conferir</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="valor-screen" class="screen">
+        <div class="screen-header">
+            <button class="back-btn" onclick="voltarTela()"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2 id="titulo-pagar-para">Pagar com Pix</h2>
+            <div style="width: 18px;"></div>
+        </div>
+        <div class="valor-screen-content">
+            <div class="valor-input-box">
+                <div class="saldo-disponivel">Saldo em conta <span id="saldo-disponivel-valor">R\$ 0,03</span></div>
+                <div class="display-valor" id="input-display-valor">0,00</div>
+                <div class="fav-nome" id="nome-fav-display">Pagar para Leonardo...</div>
+            </div>
+            <div class="custom-keyboard">
+                <button class="key-btn" onclick="digitarValor('1')">1</button><button class="key-btn" onclick="digitarValor('2')">2</button><button class="key-btn" onclick="digitarValor('3')">3</button>
+                <button class="key-btn" onclick="digitarValor('4')">4</button><button class="key-btn" onclick="digitarValor('5')">5</button><button class="key-btn" onclick="digitarValor('6')">6</button>
+                <button class="key-btn" onclick="digitarValor('7')">7</button><button class="key-btn" onclick="digitarValor('8')">8</button><button class="key-btn" onclick="digitarValor('9')">9</button>
+                <button class="key-btn" onclick="apagarValor()"><i class="fa-solid fa-delete-left"></i></button><button class="key-btn" onclick="digitarValor('0')">0</button><button class="key-btn action" onclick="proximoRevisaoPix()"><i class="fa-solid fa-check"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="revisao-screen" class="screen">
+        <div class="screen-header">
+            <button class="back-btn" onclick="voltarTela()"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2>Pagar com Pix</h2>
+            <div style="width: 18px;"></div>
+        </div>
+        <div class="content" style="padding: 20px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <i class="fa-solid fa-arrow-up-long fa-rotate-180" style="color: #ff7a00; font-size: 20px; margin-bottom: 5px;"></i>
+                <div style="font-size: 24px; font-weight: 700;" id="revisao-valor-topo">R\$ 999,99</div>
+                <div style="font-size: 13px; color: #aaa;" id="revisao-nome-topo">Leonardo</div>
+            </div>
+            <div class="bloco-detalhes">
+                <div class="detalhe-item"><span>Pagar quando</span><span style="color: #ff7a00;">Agora <i class="fa-solid fa-pen"></i></span></div>
+                <div class="detalhe-item"><span>Forma de pagamento</span><span>Débito Inter</span></div>
+            </div>
+            <h4 style="margin: 20px 0 10px 0; font-size: 14px; color: #aaa;">Quem vai receber</h4>
+            <div class="bloco-detalhes">
+                <div class="detalhe-item"><span>Nome</span><span id="rev-nome-rec">Leonardo</span></div>
+                <div class="detalhe-item"><span>CPF/CNPJ</span><span id="rev-cpf-rec">18377288</span></div>
+                <div class="detalhe-item"><span>Instituição</span><span id="rev-inst-rec">BANCO NU</span></div>
+                <div class="detalhe-item"><span>Chave Pix</span><span id="rev-chave-rec">***765*****</span></div>
+            </div>
+            <button class="btn-laranja" onclick="executarAutenticacaoPix()" style="margin-top: 30px;" id="btn-pagar-final">Pagar R\$ 999,99</button>
+        </div>
+    </div>
+
+    <div id="loading-screen" class="screen" style="justify-content: center; align-items: center; text-align: center; padding: 30px;">
+        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 40px; color: #ff7a00; margin-bottom: 20px;"></i>
+        <h3 id="loading-text" style="font-size: 16px; margin-bottom: 6px;">Processando o Pix</h3>
+        <p style="font-size: 13px; color: #888;">Aguarde enquanto a transação é processada.</p>
+    </div>
+
+    <div id="comprovante-screen" class="screen">
+        <div class="screen-header">
+            <button class="back-btn" onclick="abrirTela('home-screen')"><i class="fa-solid fa-xmark"></i></button>
+            <h2>Comprovante</h2>
+            <div style="width: 18px;"></div>
+        </div>
+        <div class="content" style="padding: 20px;">
+            <div class="comprovante-header">
+                <div class="inter-logo-comp">inter</div>
+                <div style="margin: 8px 0; background-color: #00c853; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-check" style="color: #fff; font-size: 18px;"></i></div>
+                <h3>Pix enviado</h3>
+                <div class="valor-comp" id="comp-valor">R\$ 999,99</div>
+            </div>
+            <div style="margin-top: 20px;">
+                <div style="font-size: 13px; color: #aaa; margin-bottom: 8px;">Sobre a transação</div>
+                <div class="bloco-detalhes">
+                    <div class="detalhe-item"><span>Data do pagamento</span><span id="comp-data">domingo, 18/10/2026</span></div>
+                    <div class="detalhe-item"><span>Horário</span><span id="comp-horario">17:45</span></div>
+                    <div class="detalhe-item"><span>ID da transação</span><span style="font-size: 11px; color: #aaa;" id="comp-id">c0475e7-0511-4694-b53af180736d1c81</span></div>
+                </div>
+            </div>
+            <div style="margin-top: 15px;">
+                <div style="font-size: 13px; color: #aaa; margin-bottom: 8px;">Quem recebeu</div>
+                <div class="bloco-detalhes">
+                    <div class="detalhe-item"><span>Nome</span><span id="comp-nome-rec">Leonardo</span></div>
+                    <div class="detalhe-item"><span>CPF/CNPJ</span><span id="comp-cpf-rec">18377288</span></div>
+                    <div class="detalhe-item"><span>Instituição</span><span id="comp-inst-rec">BANCO NU</span></div>
+                </div>
+            </div>
+            <div style="margin-top: 15px;">
+                <div style="font-size: 13px; color: #aaa; margin-bottom: 8px;">Quem pagou</div>
+                <div class="bloco-detalhes">
+                    <div class="detalhe-item"><span>Nome</span><span id="comp-nome-pag">Tavin</span></div>
+                    <div class="detalhe-item"><span>CPF/CNPJ</span><span id="comp-cpf-pag">77777788</span></div>
+                    <div class="detalhe-item"><span>Instituição</span><span>BANCO INTER</span></div>
+                </div>
+            </div>
+            <div class="aviso-comprovante" style="margin-top: 20px;">
+                <i class="fa-solid fa-circle-exclamation" style="font-size: 18px;"></i>
+                <span>Acompanhe suas transações. Confira pagamentos, agendamentos e 2ª via do seu comprovante no seu extrato.</span>
+            </div>
+            <button class="btn-laranja" onclick="alert('Comprovante compartilhado!')" style="margin-top: 20px; background-color: #2b2b2b; border: 1px solid #444;">Compartilhar comprovante</button>
+            <button class="btn-laranja" onclick="abrirTela('home-screen')" style="margin-top: 10px;">Realizar novo Pix</button>
+        </div>
+    </div>
+
+    <div id="config-screen" class="screen">
+        <div class="screen-header">
+            <button class="back-btn" onclick="voltarTela()"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2>Configurações de Perfil</h2>
+            <div style="width: 18px;"></div>
+        </div>
+        <div class="content" style="padding: 20px;">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                <img id="avatar-preview" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">
+                <input type="file" id="input-galeria-foto" accept="image/*" style="display: none;" onchange="carregarFotoGaleria(event)">
+                <button class="banner-btn" onclick="document.getElementById('input-galeria-foto').click()">Escolher da Galeria</button>
+            </div>
+            <div class="input-group" style="margin-bottom: 15px;"><label>Nome Completo (Remetente)</label><input type="text" id="cfg-nome" value="Tavin"></div>
+            <div class="input-group" style="margin-bottom: 15px;"><label>CPF (Remetente)</label><input type="text" id="cfg-cpf" value="77777788"></div>
+            <div class="input-group" style="margin-bottom: 15px;"><label>Instituição (Remetente)</label><input type="text" id="cfg-inst" value="BANCO INTER"></div>
+            <div class="input-group" style="margin-bottom: 15px;"><label>Nome Destinatário Padrão</label><input type="text" id="cfg-dest-nome" value="Leonardo"></div>
+            <div class="input-group" style="margin-bottom: 15px;"><label>CPF Destinatário</label><input type="text" id="cfg-dest-cpf" value="18377288"></div>
+            <div class="input-group" style="margin-bottom: 15px;"><label>Instituição Destinatário</label><input type="text" id="cfg-dest-inst" value="BANCO NU"></div>
+            <div class="input-group" style="margin-bottom: 20px;"><label>Chave Pix Destinatário</label><input type="text" id="cfg-dest-chave" value="***765*****"></div>
+            <button class="btn-laranja" onclick="salvarConfiguracoes()">Salvar Configurações</button>
+        </div>
+    </div>
+
+    <div id="modal-saldo" class="screen" style="background: rgba(0,0,0,0.85); justify-content: center; align-items: center; padding: 20px; z-index: 500;">
+        <div style="background-color: #1e1e1e; width: 100%; max-width: 350px; border-radius: 16px; padding: 20px; border: 1px solid #333;">
+            <h3 style="margin-bottom: 15px; font-size: 16px;">Alterar Saldo em Conta</h3>
+            <div class="input-group" style="margin-bottom: 15px;"><label>Novo valor (ex: 0,03):</label><input type="text" id="input-novo-saldo" value="0,03"></div>
+            <div style="display: flex; gap: 10px;"><button class="btn-laranja" style="background-color: #333;" onclick="fecharModalSaldo()">Cancelar</button><button class="btn-laranja" onclick="confirmarNovoSaldo()">Salvar</button></div>
+        </div>
+    </div>
+
+    <div id="modal-porquinho" class="screen" style="background: rgba(0,0,0,0.85); justify-content: center; align-items: center; padding: 20px; z-index: 500;">
+        <div style="background-color: #1e1e1e; width: 100%; max-width: 350px; border-radius: 16px; padding: 20px; border: 1px solid #333;">
+            <h3 style="margin-bottom: 15px; font-size: 16px;">Alterar Saldo do Porquinho</h3>
+            <div class="input-group" style="margin-bottom: 15px;"><label>Novo valor (ex: 192,60):</label><input type="text" id="input-novo-porquinho" value="192,60"></div>
+            <div style="display: flex; gap: 10px;"><button class="btn-laranja" style="background-color: #333;" onclick="fecharModalPorquinho()">Cancelar</button><button class="btn-laranja" onclick="confirmarNovoPorquinho()">Salvar</button></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let historicoTelas = ['home-screen'], saldoNumerico = 0.03, porquinhoNumerico = 192.60, digitosDigitadosPix = "0";
+    let dadosUsuario = { nomeRemetente: "Tavin", cpfRemetente: "77777788", instituicaoRemetente: "BANCO INTER", avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100", destinatarioNome: "Leonardo", destinatarioCpf: "18377288", destinatarioInst: "BANCO NU", destinatarioChave: "***765*****" };
+
+    function formatarMoeda(valor) { return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function atualizarDisplayPix() { document.getElementById('input-display-valor').innerText = formatarMoeda((parseInt(digitosDigitadosPix) || 0) / 100); }
+    function abrirTela(id) { document.querySelectorAll('.screen').forEach(s => { if(!s.id.startsWith('modal-')) s.classList.remove('active'); }); document.getElementById(id).classList.add('active'); historicoTelas.push(id); }
+    function voltarTela() { if(historicoTelas.length > 1) { historicoTelas.pop(); document.querySelectorAll('.screen').forEach(s => { if(!s.id.startsWith('modal-')) s.classList.remove('active'); }); document.getElementById(historicoTelas[historicoTelas.length - 1]).classList.add('active'); } }
+    function alternarVisibilidadeSaldo() { const el = document.getElementById('saldo-texto'), icone = document.getElementById('toggle-saldo'); if(el.innerText.includes("•")) { el.innerText = "R\$ " + formatarMoeda(saldoNumerico); icone.className = "fa-regular fa-eye"; } else { el.innerText = "••••••"; icone.className = "fa-regular fa-eye-slash"; } }
+    function abrirModalSaldo() { document.getElementById('input-novo-saldo').value = formatarMoeda(saldoNumerico); document.getElementById('modal-saldo').style.display = 'flex'; }
+    function fecharModalSaldo() { document.getElementById('modal-saldo').style.display = 'none'; }
+    function confirmarNovoSaldo() { let num = parseFloat(document.getElementById('input-novo-saldo').value.replace(/\./g, '').replace(',', '.')); if(!isNaN(num)) { saldoNumerico = num; document.getElementById('saldo-texto').innerText = "R\$ " + formatarMoeda(saldoNumerico); document.getElementById('saldo-disponivel-valor').innerText = "R\$ " + formatarMoeda(saldoNumerico); } fecharModalSaldo(); }
+    function abrirModalPorquinho() { document.getElementById('input-novo-porquinho').value = formatarMoeda(porquinhoNumerico); document.getElementById('modal-porquinho').style.display = 'flex'; }
+    function fecharModalPorquinho() { document.getElementById('modal-porquinho').style.display = 'none'; }
+    function confirmarNovoPorquinho() { let num = parseFloat(document.getElementById('input-novo-porquinho').value.replace(/\./g, '').replace(',', '.')); if(!isNaN(num)) { porquinhoNumerico = num; document.getElementById('porquinho-texto').innerText = "R\$ " + formatarMoeda(porquinhoNumerico); } fecharModalPorquinho(); }
+    function carregarFotoGaleria(e) { const f = e.target.files[0]; if(f) { const l = new FileReader(); l.onload = function(evt) { dadosUsuario.avatarUrl = evt.target.result; document.getElementById('avatar-home').src = evt.target.result; document.getElementById('avatar-preview').src = evt.target.result; }; l.readAsDataURL(f); } }
+    function salvarConfiguracoes() { dadosUsuario.nomeRemetente = document.getElementById('cfg-nome').value; dadosUsuario.cpfRemetente = document.getElementById('cfg-cpf').value; dadosUsuario.instituicaoRemetente = document.getElementById('cfg-inst').value; dadosUsuario.destinatarioNome = document.getElementById('cfg-dest-nome').value; dadosUsuario.destinatarioCpf = document.getElementById('cfg-dest-cpf').value; dadosUsuario.destinatarioInst = document.getElementById('cfg-dest-inst').value; dadosUsuario.destinatarioChave = document.getElementById('cfg-dest-chave').value; alert('Configurações salvas!'); abrirTela('home-screen'); }
+    function iniciarFluxoPix() { document.getElementById('titulo-pagar-para').innerText = `Pagar para ${dadosUsuario.destinatarioNome}`; document.getElementById('nome-fav-display').innerText = `Pagar para ${dadosUsuario.destinatarioNome}...`; digitosDigitadosPix = "0"; atualizarDisplayPix(); abrirTela('valor-screen'); }
+    function digitarValor(n) { digitosDigitadosPix = (digitosDigitadosPix === "0") ? n : digitosDigitadosPix + n; atualizarDisplayPix(); }
+    function apagarValor() { digitosDigitadosPix = (digitosDigitadosPix.length > 1) ? digitosDigitadosPix.slice(0, -1) : "0"; atualizarDisplayPix(); }
+    function proximoRevisaoPix() { let v = formatarMoeda((parseInt(digitosDigitadosPix) || 0) / 100); document.getElementById('revisao-valor-topo').innerText = "R\$ " + v; document.getElementById('revisao-nome-topo').innerText = dadosUsuario.destinatarioNome; document.getElementById('rev-nome-rec').innerText = dadosUsuario.destinatarioNome; document.getElementById('rev-cpf-rec').innerText = dadosUsuario.destinatarioCpf; document.getElementById('rev-inst-rec').innerText = dadosUsuario.destinatarioInst; document.getElementById('rev-chave-rec').innerText = dadosUsuario.destinatarioChave; document.getElementById('btn-pagar-final').innerText = `Pagar R$ ${v}`; abrirTela('revisao-screen'); }
+    function executarAutenticacaoPix() { abrirTela('loading-screen'); document.getElementById('loading-text').innerText = "Autenticando..."; setTimeout(() => { document.getElementById('loading-text').innerText = "Processando o Pix"; setTimeout(() => { let v = formatarMoeda((parseInt(digitosDigitadosPix) || 0) / 100); let agora = new Date(), d = String(agora.getDate()).padStart(2,'0'), m = String(agora.getMonth()+1).padStart(2,'0'), a = agora.getFullYear(), h = String(agora.getHours()).padStart(2,'0'), min = String(agora.getMinutes()).padStart(2,'0'); let ds = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'][agora.getDay()]; document.getElementById('comp-data').innerText = `${ds}, ${d}/${m}/${a}`; document.getElementById('comp-horario').innerText = `${h}:${min}`; document.getElementById('comp-id').innerText = 'c' + Math.random().toString(16).substring(2,9) + '-' + Math.random().toString(16).substring(2,6); document.getElementById('comp-valor').innerText = "R\$ " + v; document.getElementById('comp-nome-rec').innerText = dadosUsuario.destinatarioNome; document.getElementById('comp-cpf-rec').innerText = dadosUsuario.destinatarioCpf; document.getElementById('comp-inst-rec').innerText = dadosUsuario.destinatarioInst; document.getElementById('comp-nome-pag').innerText = dadosUsuario.nomeRemetente; document.getElementById('comp-cpf-pag').innerText = dadosUsuario.cpfRemetente; abrirTela('comprovante-screen'); }, 1200); }, 1200); }
+</script>
+</body>
+</html>
